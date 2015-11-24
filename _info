@@ -5,3 +5,23 @@ cargo build
 
 ./target/debug/git-status-all
 
+
+1.
+git status --short | wc -l
+            niewypchnięte zmiany
+
+2.
+git branch
+            lista branchy
+
+
+3.
+trzeba sprawdzić czy wszystkie zmiany zostały wypchnięte
+ 
+ 
+ 
+ 
+string currentBranch = run("git rev-parse --abbrev-ref HEAD");                             
+bool canCommit = run("git diff-index --name-only --ignore-submodules HEAD --").empty();
+bool canPush = stoi(run("git rev-list HEAD...origin/" + currentBranch + " --ignore-submodules --count")[0]) > 0;
+ 

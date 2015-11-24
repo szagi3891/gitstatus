@@ -1,0 +1,7 @@
+cargo new 'git-status-all' --bin
+
+
+cargo build
+
+./target/debug/git-status-all
+

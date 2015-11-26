@@ -5,6 +5,12 @@ cargo build
 
 ./target/debug/git-status-all
 
+0.
+git rev-parse
+			sprawdza czy mamy doczynienia z repo
+			
+			jeśli nic nie wyszło to znaczy że jest poprawne repo
+			
 
 1.
 git status --short | wc -l

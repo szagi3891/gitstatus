@@ -1,21 +1,58 @@
+use std::io;
 use std::fs::{self};    //, DirEntry
 use std::path::Path;
 
 
 
+enum ErrorList {
+	MainDir(io::Result<String>)
+}
+
+
+
 fn main() {
     
-    println!("Hello, world!");
+    println!("Hello, world! 2");
     
-    let dir = Path::new("/home/grzegorz/Pulpit/git-status-all");
+	let listResult = getList(&"/home/grzegorz/Pulpit".to_string());
+	
+	match listResult {
+		
+		Ok(list) => {
+			println!("ok list");
+		}
+		Err(error) => {
+			println!("err list");
+		}
+	}
+}
+
+
+
+fn getList(dir_str: &String) -> Result<Vec<String>, ErrorList> {
+	
+	
+    let dir = Path::new(dir_str);	//"/home/grzegorz/Pulpit");
     
-    match fs::metadata(dir) {
+	
+	match fs::metadata(dir) {
         
         Ok(dir_info) => {
+			
+			//Err(ErrorList::Ok)
+			Ok(vec!["aa".to_string()])
+			
+        }
+        Err(err) => {
             
+			Err(ErrorList::MainDir(err))
+            //panic!("błąd sprawdzania {:?}", err);
+        }
+    }
+	
+	/*
+    
             if dir_info.is_dir() {
-                
-                println!("meta - katalog istotnie");
                 
                 match fs::read_dir(dir) {
                     
@@ -23,12 +60,12 @@ fn main() {
                         
                         for item in list {
                             
-                            println!("pierwszy plik");
-                            
                             match item {
                                 
                                 Ok(list_item) => {
                                     
+									println!("czytam {:?}", list_item.path());
+									
                                     match list_item.metadata() {
                                         
                                         Ok(list_item_metadata) => {
@@ -41,7 +78,8 @@ fn main() {
                                             
                                         }
                                         Err(err) => {
-                                            panic!("błąd pobieraniu metadanych {:?}", err);
+                                            //panic!("błąd pobieraniu metadanych {:?}", err);
+											println!("błąd pobieraniu metadanych {:?}", err);
                                         }
                                     }
                                     
@@ -63,13 +101,6 @@ fn main() {
                 
                 panic!("to nie katalog");
             }
-            
-            
-        }
-        Err(err) => {
-            
-            panic!("błąd sprawdzania {:?}", err);
-        }
-    }
-    
+
+	*/
 }

@@ -4,8 +4,8 @@ use std::path::Path;
 
 
 
-enum ErrorList {
-	MainDir(io::Result<String>)
+enum ErrGetList {
+	MainDir(std::io::Error)
 }
 
 
@@ -19,7 +19,9 @@ fn main() {
 	match listResult {
 		
 		Ok(list) => {
+	
 			println!("ok list");
+	
 		}
 		Err(error) => {
 			println!("err list");
@@ -29,7 +31,7 @@ fn main() {
 
 
 
-fn getList(dir_str: &String) -> Result<Vec<String>, ErrorList> {
+fn getList(dir_str: &String) -> Result<Vec<String>, ErrGetList> {	//Result<Vec<String>, ErrorList> {
 	
 	
     let dir = Path::new(dir_str);	//"/home/grzegorz/Pulpit");
@@ -45,8 +47,8 @@ fn getList(dir_str: &String) -> Result<Vec<String>, ErrorList> {
         }
         Err(err) => {
             
-			Err(ErrorList::MainDir(err))
-            //panic!("błąd sprawdzania {:?}", err);
+			//Err(ErrorList::MainDir(err))
+            panic!("błąd sprawdzania {:?}", err);
         }
     }
 	

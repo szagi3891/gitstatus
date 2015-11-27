@@ -1,6 +1,6 @@
 use std::fs::{self};
 use std::path::Path;
-use std::process::Command;
+use std::process::{Command, Output};
 
 
 
@@ -19,12 +19,21 @@ struct PathInfo {
 	is_dir : bool,
 }
 
+enum ErrStatus {
+	Exec(std::io::Error),
+	NoEmptyOutput(Output),
+}
 
 
 fn main() {
     
+	println!("\n");
 	
-	let list_result = get_list(&"/home/grzegorz/Pulpit/rust".to_string());
+	
+	let dir_str     = "/home/grzegorz/Pulpit/rust".to_string();
+	let root_path   = Path::new(&dir_str);
+	let list_result = get_list(&root_path);
+	
 	
 	match list_result {
 		
@@ -32,6 +41,7 @@ fn main() {
 			
 			for item in list {
 				test_repo(&item);
+				println!("\n");
 			}
 		}
 		
@@ -48,50 +58,71 @@ fn test_repo(item: &PathInfo) {
 	
 	if item.is_dir == false {
 		
-		println!("plik - pomijam: {}", item.path);
+		println!("{}", item.path);
+		println!("test_repo: pomijam bo to plik");
 		return;
 	}
 	
 	
-	let output = Command::new("git").arg("rev-parse").output();
+	/*
+	let command = Command::new("git")
+		.arg("rev-parse")
+		.current_dir(&Path::new(&item.path));
 	
+	match exec_command(&mut command) {	//.current_dir(&root_path)) {
+	*/
+	
+	match exec_command(Command::new("git").arg("rev-parse").current_dir(&Path::new(&item.path))) {
+		
+		Ok(()) => {
+			println!("{}", item.path);
+			println!("ok ... dalsze przetwarzanie tego repo ...");
+		}
+		
+		Err(ErrStatus::Exec(err)) => {
+			
+			println!("{}", item.path);
+			println!("test_repo: ErrStatus::Exec --> {}", err);
+			return;
+		}
+		
+		Err(ErrStatus::NoEmptyOutput(out)) => {
+			
+			println!("{}", item.path);
+			println!("test_repo: ErrStatus::NoEmptyOutput --> {}, {:?}, {:?}", out.status, out.stdout, out.stderr);
+			
+			return;
+		}
+	}
+}
+
+
+//fn exec_command<S: Command::Command>(path: &String, command: S) {
+
+fn exec_command(command: &mut Command) -> Result<(), ErrStatus> {
+	
+	let output = command.output();
 	
 	match output {
+		
 		Ok(out) => {
 			
 			if out.status.success() && out.stdout.len() == 0 && out.stderr.len() == 0 {
 				
-				println!("sukces: {}", item.path);
+				Ok(())
 				
 			} else {
-				panic!("problem ze statusem repo: {}", item.path);
+				Err(ErrStatus::NoEmptyOutput(out))
 			}
 		}
 		Err(err) => {
-			println!("err : {:?}", err);
+			Err(ErrStatus::Exec(err))
 		}
-	}
-	
-	
-	
-	/*
-	let output = Command::new("sh")
-						 .arg("-c")
-						 .arg("echo hello")
-						 .output()
-	*/
-	
-	/*
-	let status = Command::new("ls").status().unwrap_or_else(|e| {
-		panic!("failed to execute process: {}", e)
-	});
-
-	println!("process exited with: {}", status);
-	*/
+	}	
 }
 
 
-fn get_list(dir_str: &String) -> Result<Vec<PathInfo>, ErrGetList> {	//Result<Vec<String>, ErrorList> {
+fn get_list(dir_str: &Path) -> Result<Vec<PathInfo>, ErrGetList> {	//Result<Vec<String>, ErrorList> {
 	
 	
     let dir = Path::new(dir_str);	//"/home/grzegorz/Pulpit");

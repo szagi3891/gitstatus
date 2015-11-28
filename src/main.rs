@@ -21,7 +21,7 @@ struct PathInfo {
 
 enum ErrStatus {
 	Exec(std::io::Error),
-	NoEmptyOutput(Output),
+	Output(Output),
 }
 
 
@@ -72,6 +72,16 @@ fn test_repo(item: &PathInfo) {
 	match exec_command(&mut command) {	//.current_dir(&root_path)) {
 	*/
 	
+	/*
+	exec, komenda, spodziewany output
+			-> bool			- udane lub nie
+	
+	output <- exec, komenda
+		spodziewamy się tylko outputu, w pozostałych przypadkach błąd
+	
+	show output
+	*/
+	
 	match exec_command(Command::new("git").arg("rev-parse").current_dir(&Path::new(&item.path))) {
 		
 		Ok(()) => {
@@ -86,20 +96,29 @@ fn test_repo(item: &PathInfo) {
 			return;
 		}
 		
-		Err(ErrStatus::NoEmptyOutput(out)) => {
+		Err(ErrStatus::Output(out)) => {
 			
 			println!("{}", item.path);
 			println!("test_repo: ErrStatus::NoEmptyOutput --> {}, {:?}, {:?}", out.status, out.stdout, out.stderr);
+			
+			match str::from_utf8(out.stdout) {
+				Ok(v) => v {
+				}
+				Err(e) => {
+					
+				}
+			};
 			
 			return;
 		}
 	}
 }
 
+//fn show_u8(vec
 
 //fn exec_command<S: Command::Command>(path: &String, command: S) {
 
-fn exec_command(command: &mut Command) -> Result<(), ErrStatus> {
+fn exec_command(command: &mut Command) -> Result<(), ErrCommand> {
 	
 	let output = command.output();
 	
@@ -112,11 +131,11 @@ fn exec_command(command: &mut Command) -> Result<(), ErrStatus> {
 				Ok(())
 				
 			} else {
-				Err(ErrStatus::NoEmptyOutput(out))
+				Err(ErrCommand::Output(out))
 			}
 		}
 		Err(err) => {
-			Err(ErrStatus::Exec(err))
+			Err(ErrCommand::Exec(err))
 		}
 	}	
 }
@@ -148,18 +167,23 @@ fn get_list(dir_str: &Path) -> Result<Vec<PathInfo>, ErrGetList> {	//Result<Vec<
 							
 							Ok(list_item) => {
 								
+														//TODO - trzeba się pozbyć unwrap
+								
+								let path_item = list_item.path().to_str().unwrap().to_string();
+								
+								
 								match list_item.metadata() {
 									
 									Ok(list_item_metadata) => {
 										
 										if list_item_metadata.is_dir() {
-											out.push(PathInfo{path: list_item.path().to_str().unwrap().to_string(), is_dir : true});
+											out.push(PathInfo{path: path_item, is_dir : true});
 										} else {
-											out.push(PathInfo{path: list_item.path().to_str().unwrap().to_string(), is_dir : false});
+											out.push(PathInfo{path: path_item, is_dir : false});
 										}
 									}
 									Err(err) => {	
-										return Err(ErrGetList::ItemMetadata(list_item.path().to_str().unwrap().to_string(), err));
+										return Err(ErrGetList::ItemMetadata(path_item, err));
 									}
 								}
 							}

@@ -1,7 +1,11 @@
 use std::fs::{self};
 use std::path::Path;
 use std::process::{Command, Output};
+use std::str;
 
+extern crate ansi_term;
+
+use ansi_term::Colour::{Blue, Yellow, Red};
 
 
 #[derive(Debug)]
@@ -19,14 +23,18 @@ struct PathInfo {
 	is_dir : bool,
 }
 
-enum ErrStatus {
+enum ErrCommand {
 	Exec(std::io::Error),
 	Output(Output),
+	Utf8(std::string::FromUtf8Error),
 }
+
 
 
 fn main() {
     
+	println!("This is in red: {}", Red.paint("a red string"));
+	
 	println!("\n");
 	
 	
@@ -52,14 +60,30 @@ fn main() {
 	}
 }
 
+/*
+fn show_color_red() -> String {
+}
+*/
+
+/*
+let mut a : String = "A".into();
+let b : String = "B".into();
+
+a.push_str(&b);
+*/
+
 
 fn test_repo(item: &PathInfo) {
 	
 	
 	if item.is_dir == false {
 		
-		println!("{}", item.path);
-		println!("test_repo: pomijam bo to plik");
+		let mess1 = Yellow.paint("test_repo:");
+		let mess2 = Yellow.paint(item.path.clone());
+		let mess3 = Yellow.paint(" - pomijam bo to plik");
+		
+		println!("{} {} {}", mess1, mess2, mess3);
+		
 		return;
 	}
 	
@@ -82,25 +106,26 @@ fn test_repo(item: &PathInfo) {
 	show output
 	*/
 	
-	match exec_command(Command::new("git").arg("rev-parse").current_dir(&Path::new(&item.path))) {
+	match exec_get(Command::new("git").arg("rev-parse").current_dir(&Path::new(&item.path))) {
 		
-		Ok(()) => {
+		Ok(mess) => {
 			println!("{}", item.path);
-			println!("ok ... dalsze przetwarzanie tego repo ...");
+			println!("ok ... dalsze przetwarzanie tego repo ... {}", mess);
 		}
 		
-		Err(ErrStatus::Exec(err)) => {
+		Err(ErrCommand::Exec(err)) => {
 			
 			println!("{}", item.path);
 			println!("test_repo: ErrStatus::Exec --> {}", err);
 			return;
 		}
 		
-		Err(ErrStatus::Output(out)) => {
+		Err(ErrCommand::Output(out)) => {
 			
 			println!("{}", item.path);
 			println!("test_repo: ErrStatus::NoEmptyOutput --> {}, {:?}, {:?}", out.status, out.stdout, out.stderr);
 			
+			/*
 			match str::from_utf8(out.stdout) {
 				Ok(v) => v {
 				}
@@ -108,8 +133,15 @@ fn test_repo(item: &PathInfo) {
 					
 				}
 			};
+			*/
 			
 			return;
+		}
+		
+		Err(ErrCommand::Utf8(errUtf)) => {
+			
+			println!("{}", item.path);
+			println!("test_repo: ErrStatus::Utf8 --> {}", errUtf);
 		}
 	}
 }
@@ -118,6 +150,7 @@ fn test_repo(item: &PathInfo) {
 
 //fn exec_command<S: Command::Command>(path: &String, command: S) {
 
+/*
 fn exec_command(command: &mut Command) -> Result<(), ErrCommand> {
 	
 	let output = command.output();
@@ -130,14 +163,62 @@ fn exec_command(command: &mut Command) -> Result<(), ErrCommand> {
 				
 				Ok(())
 				
-			} else {
+			} else {	
 				Err(ErrCommand::Output(out))
 			}
 		}
 		Err(err) => {
 			Err(ErrCommand::Exec(err))
 		}
-	}	
+	}
+}
+*/
+
+
+fn exec_get(command: &mut Command) -> Result<String, ErrCommand> {
+	
+	let output = command.output();
+	
+	match output {
+		
+		Ok(out) => {
+			
+			if out.status.success() && out.status.code() == Some(0) && out.stderr.len() == 0 {
+				
+				//&& out.stdout.len() == 0 && out.stderr.len() == 0
+				
+				//Ok(out.stdout.to_string())
+				
+				//format_args!("hello {}", "world")
+				
+				match String::from_utf8(out.stdout) {
+					Ok(str) => Ok(str),
+					Err(err) => Err(ErrCommand::Utf8(err))
+				}
+				
+				//-> Result<String, FromUtf8Error>
+				
+				
+				/*
+				match str::from_utf8(out.stdout) {
+					Ok(str) => Ok(str),
+					Err(err) => panic!("Invalid UTF-8 sequence: {}", err),
+				}
+				*/
+				//format_args!("hello {}", "world")
+				
+				//println!("result: {}", s);
+				
+				//Ok("ok ...".to_string())
+				
+			} else {	
+				Err(ErrCommand::Output(out))
+			}
+		}
+		Err(err) => {
+			Err(ErrCommand::Exec(err))
+		}
+	}
 }
 
 

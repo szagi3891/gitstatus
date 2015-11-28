@@ -2,3 +2,6 @@
 name = "git-status-all"
 version = "0.1.0"
 authors = ["grzegorz"]
+
+[dependencies]
+ansi_term = "0.7.0"

@@ -2,6 +2,7 @@ use std::fs::{self};
 use std::path::Path;
 use std::process::{Command, Output};
 use std::str;
+use std::fmt;
 
 extern crate ansi_term;
 
@@ -30,6 +31,7 @@ enum ErrCommand {
 }
 
 
+//format_args!("hello {}", "world")
 
 fn main() {
     
@@ -78,33 +80,14 @@ fn test_repo(item: &PathInfo) {
 	
 	if item.is_dir == false {
 		
-		let mess1 = Yellow.paint("test_repo:");
-		let mess2 = Yellow.paint(item.path.clone());
-		let mess3 = Yellow.paint(" - pomijam bo to plik");
-		
-		println!("{} {} {}", mess1, mess2, mess3);
+		let mess = fmt::format(format_args!("test_repo: '{}' --> pomijam bo to plik", item.path.clone()));
+
+		println!("{}", Yellow.paint(mess));
 		
 		return;
 	}
 	
 	
-	/*
-	let command = Command::new("git")
-		.arg("rev-parse")
-		.current_dir(&Path::new(&item.path));
-	
-	match exec_command(&mut command) {	//.current_dir(&root_path)) {
-	*/
-	
-	/*
-	exec, komenda, spodziewany output
-			-> bool			- udane lub nie
-	
-	output <- exec, komenda
-		spodziewamy się tylko outputu, w pozostałych przypadkach błąd
-	
-	show output
-	*/
 	
 	match exec_get(Command::new("git").arg("rev-parse").current_dir(&Path::new(&item.path))) {
 		
@@ -113,66 +96,46 @@ fn test_repo(item: &PathInfo) {
 			println!("ok ... dalsze przetwarzanie tego repo ... {}", mess);
 		}
 		
-		Err(ErrCommand::Exec(err)) => {
+		Err(errStatus) => {
 			
-			println!("{}", item.path);
-			println!("test_repo: ErrStatus::Exec --> {}", err);
-			return;
+			println!("test_repo: '{}' --> {}", item.path, exec_err_to_string(errStatus))
+		}
+	}
+}
+
+
+fn exec_err_to_string(err: ErrCommand) -> String {
+	
+	match err {
+		
+		ErrCommand::Exec(err) => {
+			
+			fmt::format(format_args!("ErrStatus::Exec --> {}", err))
 		}
 		
-		Err(ErrCommand::Output(out)) => {
+		ErrCommand::Output(out) => {
 			
-			println!("{}", item.path);
-			println!("test_repo: ErrStatus::NoEmptyOutput --> {}, {:?}, {:?}", out.status, out.stdout, out.stderr);
+			//zrobić formatowanie kodu odpowiedzi
 			
-			/*
-			match str::from_utf8(out.stdout) {
-				Ok(v) => v {
-				}
-				Err(e) => {
-					
-				}
+			let stdout = match String::from_utf8(out.stdout) {
+				Ok(str) => str,
+				Err(err) => "incorrect utf8: ".to_string(),
 			};
-			*/
 			
-			return;
+			let stderr = match String::from_utf8(out.stderr) {
+				Ok(str) => str,
+				Err(err) => "incorrect utf8: ".to_string(),
+			};
+			
+			fmt::format(format_args!("ErrStatus::NoEmptyOutput --> {},\n {},\n {}", out.status, stdout, stderr))
 		}
 		
-		Err(ErrCommand::Utf8(errUtf)) => {
+		ErrCommand::Utf8(errUtf) => {
 			
-			println!("{}", item.path);
-			println!("test_repo: ErrStatus::Utf8 --> {}", errUtf);
+			fmt::format(format_args!("ErrStatus::Utf8 --> {}", errUtf))
 		}
 	}
 }
-
-//fn show_u8(vec
-
-//fn exec_command<S: Command::Command>(path: &String, command: S) {
-
-/*
-fn exec_command(command: &mut Command) -> Result<(), ErrCommand> {
-	
-	let output = command.output();
-	
-	match output {
-		
-		Ok(out) => {
-			
-			if out.status.success() && out.stdout.len() == 0 && out.stderr.len() == 0 {
-				
-				Ok(())
-				
-			} else {	
-				Err(ErrCommand::Output(out))
-			}
-		}
-		Err(err) => {
-			Err(ErrCommand::Exec(err))
-		}
-	}
-}
-*/
 
 
 fn exec_get(command: &mut Command) -> Result<String, ErrCommand> {
@@ -185,32 +148,11 @@ fn exec_get(command: &mut Command) -> Result<String, ErrCommand> {
 			
 			if out.status.success() && out.status.code() == Some(0) && out.stderr.len() == 0 {
 				
-				//&& out.stdout.len() == 0 && out.stderr.len() == 0
-				
-				//Ok(out.stdout.to_string())
-				
-				//format_args!("hello {}", "world")
-				
 				match String::from_utf8(out.stdout) {
 					Ok(str) => Ok(str),
 					Err(err) => Err(ErrCommand::Utf8(err))
 				}
-				
-				//-> Result<String, FromUtf8Error>
-				
-				
-				/*
-				match str::from_utf8(out.stdout) {
-					Ok(str) => Ok(str),
-					Err(err) => panic!("Invalid UTF-8 sequence: {}", err),
-				}
-				*/
-				//format_args!("hello {}", "world")
-				
-				//println!("result: {}", s);
-				
-				//Ok("ok ...".to_string())
-				
+			
 			} else {	
 				Err(ErrCommand::Output(out))
 			}

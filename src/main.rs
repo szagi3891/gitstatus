@@ -50,9 +50,21 @@ fn main() {
 		Ok(list) => {
 			
 			for item in list {
-				test_repo(&item);
+				
+				match test_repo(&item) {
+					Ok(()) => {
+						//przetwarzanie kolejnego
+					}
+					Err(strErr) => {
+						println!("{}", strErr);
+						return;
+					}
+				}
+				
 				println!("\n");
 			}
+			
+			println!("poprawnie ...");
 		}
 		
 		Err(error) => {
@@ -75,34 +87,49 @@ a.push_str(&b);
 */
 
 
-fn test_repo(item: &PathInfo) {
+fn test_repo(item: &PathInfo) -> Result<(), String> {
 	
 	
 	if item.is_dir == false {
 		
 		let mess = fmt::format(format_args!("test_repo: '{}' --> pomijam bo to plik", item.path.clone()));
-
-		println!("{}", Yellow.paint(mess));
 		
-		return;
+		return Err(fmt::format(format_args!("{}", Yellow.paint(mess))));
 	}
 	
 	
+	match exec_expect(Command::new("git").arg("rev-parse").current_dir(&Path::new(&item.path)), "".to_string()) {
+		Ok(()) => {
+		}
+		Err(strErr) => {
+			return Err(strErr)
+		}
+	}
 	
-	match exec_get(Command::new("git").arg("rev-parse").current_dir(&Path::new(&item.path))) {
+	//... dalsze przetwarzanie tego repo
+	
+	Ok(())
+}
+
+fn exec_expect(command: &mut Command, value_expect: String) -> Result<(), String> {
+	
+	
+	match exec_get(command) {
 		
 		Ok(mess) => {
-			println!("{}", item.path);
-			println!("ok ... dalsze przetwarzanie tego repo ... {}", mess);
+			if mess == value_expect {
+				Ok(())
+			} else {
+				Err("Spodziewano się innej wartości")
+			}
 		}
 		
 		Err(errStatus) => {
 			
-			println!("test_repo: '{}' --> {}", item.path, exec_err_to_string(errStatus))
+			Err(fmt::format(format_args!("błąd wykonywania polecenia --> '{}'", exec_err_to_string(errStatus))))
 		}
 	}
 }
-
 
 fn exec_err_to_string(err: ErrCommand) -> String {
 	

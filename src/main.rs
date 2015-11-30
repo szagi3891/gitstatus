@@ -1,12 +1,12 @@
 use std::fs::{self};
 use std::path::Path;
 use std::process::{Command, Output};
-use std::str;
+//use std::str;
 use std::fmt;
 
 extern crate ansi_term;
 
-use ansi_term::Colour::{Blue, Yellow, Red};
+use ansi_term::Colour::{Red, Green};		//Blue, Yellow, 
 
 
 #[derive(Debug)]
@@ -30,12 +30,19 @@ enum ErrCommand {
 	Utf8(std::string::FromUtf8Error),
 }
 
+#[derive(Debug)]
+struct Comm {
+	current_dir : String,
+	command     : String,
+	args        : Vec<String>,
+}
+
 
 //format_args!("hello {}", "world")
 
 fn main() {
     
-	println!("This is in red: {}", Red.paint("a red string"));
+	//println!("This is in red: {}", Red.paint("a red string"));
 	
 	println!("\n");
 	
@@ -49,22 +56,40 @@ fn main() {
 		
 		Ok(list) => {
 			
+			let mut count_ok = 0;
+			let list_len     = list.len();
+			
 			for item in list {
+				
+				println!("Testuję ścieżkę: {}", item.path);
 				
 				match test_repo(&item) {
 					Ok(()) => {
-						//przetwarzanie kolejnego
+						println!("{}", Green.paint("ok"));
+						count_ok = count_ok + 1;
 					}
-					Err(strErr) => {
-						println!("{}", strErr);
-						return;
+					Err(str_err) => {
+						println!("{}", Red.paint(str_err));
 					}
 				}
 				
 				println!("\n");
 			}
 			
-			println!("poprawnie ...");
+			println!("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+			
+			if count_ok == list_len {
+				
+				println!("{}", Green.paint("Cała lista została sprawdzona"));
+				
+			} else {
+				
+				let count_err = list_len - count_ok;
+				let mess = fmt::format(format_args!("Cała lista została sprawdzona - błędnych {} z {}", count_err, list_len));
+				println!("{}", Red.paint(mess));
+			}
+			
+			println!("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
 		}
 		
 		Err(error) => {
@@ -72,6 +97,9 @@ fn main() {
 			println!("err list {:?}", error);
 		}
 	}
+	
+	
+	println!("\n\n");
 }
 
 /*
@@ -86,32 +114,55 @@ let b : String = "B".into();
 a.push_str(&b);
 */
 
-
 fn test_repo(item: &PathInfo) -> Result<(), String> {
 	
 	
 	if item.is_dir == false {
 		
-		let mess = fmt::format(format_args!("test_repo: '{}' --> pomijam bo to plik", item.path.clone()));
-		
-		return Err(fmt::format(format_args!("{}", Yellow.paint(mess))));
+		return Err(fmt::format(format_args!("pomijam bo to plik")));
 	}
 	
 	
-	match exec_expect(Command::new("git").arg("rev-parse").current_dir(&Path::new(&item.path)), "".to_string()) {
-		Ok(()) => {
-		}
-		Err(strErr) => {
-			return Err(strErr)
-		}
-	}
+	/*
+	sprawdza czy to repozytorium git
+	jeśli pusty string odpowiedzi to repo jest poprawne
+	*/
 	
-	//... dalsze przetwarzanie tego repo
+	let command1 = Comm {
+		current_dir : item.path.clone(),
+		command     : "git".to_string(),
+		args        : vec!["rev-parse".to_string()],
+	};
+	
+	
+	
+	try!(exec_expect(&command1, "".to_string()));
+	
+	
+	/*
+	sprawdza czy występują nieskomitowane zmiany
+	*/
+	
+	
+	let command2 = Comm {
+		current_dir : item.path.clone(),
+		command     : "git".to_string(),
+		args        : vec!["status".to_string(), "--short".to_string()],
+	};
+	
+	
+	try!(exec_expect(&command2, "".to_string()));
+	
+	
+	//sprawdzanie poszczególnych branczy pozostało
+	
 	
 	Ok(())
 }
 
-fn exec_expect(command: &mut Command, value_expect: String) -> Result<(), String> {
+
+
+fn exec_expect(command: &Comm, value_expect: String) -> Result<(), String> {
 	
 	
 	match exec_get(command) {
@@ -120,13 +171,16 @@ fn exec_expect(command: &mut Command, value_expect: String) -> Result<(), String
 			if mess == value_expect {
 				Ok(())
 			} else {
-				Err("Spodziewano się innej wartości")
+				Err(fmt::format(format_args!("spodziewano się innej wartości --> '{}'", mess)))
 			}
 		}
 		
-		Err(errStatus) => {
+		Err(err_status) => {
 			
-			Err(fmt::format(format_args!("błąd wykonywania polecenia --> '{}'", exec_err_to_string(errStatus))))
+			let comm        = comm_to_string(command);
+			let err_message = exec_err_to_string(err_status);
+			
+			Err(fmt::format(format_args!("błąd wykonywania polecenia:\n{}\n --> \n{}", comm, err_message)))
 		}
 	}
 }
@@ -146,28 +200,59 @@ fn exec_err_to_string(err: ErrCommand) -> String {
 			
 			let stdout = match String::from_utf8(out.stdout) {
 				Ok(str) => str,
-				Err(err) => "incorrect utf8: ".to_string(),
+				Err(err) => fmt::format(format_args!("incorrect utf8: <{}>", err)),
 			};
 			
 			let stderr = match String::from_utf8(out.stderr) {
 				Ok(str) => str,
-				Err(err) => "incorrect utf8: ".to_string(),
+				Err(err) => fmt::format(format_args!("incorrect utf8: <{}>", err)),
 			};
 			
-			fmt::format(format_args!("ErrStatus::NoEmptyOutput --> {},\n {},\n {}", out.status, stdout, stderr))
+			fmt::format(format_args!("ErrStatus::NoEmptyOutput --> {}\nstdout -->\n{}\nstderr -->\n{}", out.status, stdout, stderr))
 		}
 		
-		ErrCommand::Utf8(errUtf) => {
+		ErrCommand::Utf8(err_utf) => {
 			
-			fmt::format(format_args!("ErrStatus::Utf8 --> {}", errUtf))
+			fmt::format(format_args!("ErrStatus::Utf8 --> {}", err_utf))
 		}
 	}
 }
 
 
-fn exec_get(command: &mut Command) -> Result<String, ErrCommand> {
+fn comm_to_string(command: &Comm) -> String {
 	
-	let output = command.output();
+	let mut out:Vec<String> = vec![];
+	
+	out.push(command.command.clone());
+	
+	for arg in command.args.clone() {
+		out.push(arg);
+	}
+	
+	out.push("in".to_string());
+	
+	out.push(command.current_dir.clone());
+	
+	out.join(" ")
+}
+
+
+fn get_output(command: &Comm) -> Result<std::process::Output, std::io::Error> {
+	
+	let mut comm = Command::new(command.command.clone());
+	
+	comm.current_dir(&Path::new(&command.current_dir));
+	
+	for arg in command.args.clone() {
+		comm.arg(arg);
+	}
+	
+	comm.output()
+}
+
+fn exec_get(command: &Comm) -> Result<String, ErrCommand> {
+	
+	let output = get_output(command);
 	
 	match output {
 		

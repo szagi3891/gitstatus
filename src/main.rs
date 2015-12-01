@@ -1,7 +1,7 @@
 use std::fs::{self};
 use std::path::Path;
 use std::process::{Command, Output};
-//use std::str;
+use std::str;
 use std::fmt;
 
 extern crate ansi_term;
@@ -54,6 +54,19 @@ fn main() {
 //TODO - parsowanie argumentu
 //TODO - sprawdzanie branchy
 //TODO - usunięcie unwrap
+
+/*
+let four_lines = "foo\r\nbar\n\nbaz\n";
+let v: Vec<&str> = four_lines.lines().collect();
+assert_eq!(v, ["foo", "bar", "", "baz"]);
+"lion::tiger::leopard".split("::").collect(); -> iterator
+
+std::str::from_chars(char_vector.as_slice()); // creates a ~str
+char_vector.iter().map(|c| *c).collect::<std::strbuf::StrBuf>();
+Docs: std::str::from_chars
+(The latter can be used to collect to a ~str too, just by changing the StrBuf type hint.)
+
+*/
 
 fn real_main() -> i32 {
     
@@ -188,7 +201,23 @@ fn test_repo(item: &PathInfo) -> Result<(), String> {
 		
 		Ok(list_str) => {
 			
-			println!("lista branczy do przetworzenia\n{}", list_str);
+			//println!("lista branczy do przetworzenia\n{}", list_str);
+			
+			for branch in list_str.lines() {
+				
+				//let branch_clear = clear_branch_name(branch.to_string());
+				/*
+				let branch_clear = branch.to_string().chars().filter(|&item| {
+					//item % 2 == 0
+					println!("item: {:?}", item);
+					true
+				});
+				
+				println!("branch do sprawdzenia {} -> {}", branch, branch_clear);
+				*/
+				
+				println!("branch do sprawdzenia -> {}", branch);
+			}
 			
 			return Ok(())
 			//trzeba przetworzyć tą listę
@@ -199,7 +228,13 @@ fn test_repo(item: &PathInfo) -> Result<(), String> {
 	}
 }
 
-
+/*
+fn clear_branch_name(branch: String) -> String {
+	
+	//.chars()
+	
+	branch
+}*/
 
 fn exec_expect(command: &Comm, value_expect: String) -> Result<(), String> {
 	

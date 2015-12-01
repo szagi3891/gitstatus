@@ -38,8 +38,6 @@ struct Comm {
 }
 
 
-//format_args!("hello {}", "world")
-
 fn main() {
 	
 	println!("");
@@ -52,8 +50,11 @@ fn main() {
 }
 
 //TODO - parsowanie argumentu
-//TODO - sprawdzanie branchy
 //TODO - usunięcie unwrap
+
+
+//format_args!("hello {}", "world")
+//let out = format!("hello {}", "world");
 
 /*
 let four_lines = "foo\r\nbar\n\nbaz\n";
@@ -279,7 +280,7 @@ fn test_branch(path: &String, branch_clear: &String) -> Result<String, String> {
 			if str_trim == "0".to_string() {
 				Ok(str_trim)
 			} else {
-				Err(format!("nieprawidłowa wartość: {}", str_trim))
+				Err(format!("rozsynchronizowany branch: {}", str_trim))
 			}
 		}
 		

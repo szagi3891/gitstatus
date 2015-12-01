@@ -1,8 +1,6 @@
 use std::fs::{self};
 use std::path::Path;
 use std::process::{Command, Output};
-//use std::str;
-use std::fmt;
 
 extern crate ansi_term;
 
@@ -123,7 +121,7 @@ fn real_main() -> i32 {
 			} else {
 				
 				let count_err = list_len - count_ok;
-				let mess = fmt::format(format_args!("Cała lista została sprawdzona - błędnych {} z {}", count_err, list_len));
+				let mess = format!("Cała lista została sprawdzona - błędnych {} z {}", count_err, list_len);
 				
 				println_red("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!".to_string());
 				println_red(mess);
@@ -136,7 +134,7 @@ fn real_main() -> i32 {
 		
 		Err(error) => {
 			
-			let mess = fmt::format(format_args!("err list {:?}", error));
+			let mess = format!("err list {:?}", error);
 								   
 			println_red(mess);
 			
@@ -162,7 +160,7 @@ fn test_repo(item: &PathInfo) -> Result<(), String> {
 	
 	if item.is_dir == false {
 		
-		return Err(fmt::format(format_args!("pomijam bo to plik")));
+		return Err(format!("pomijam bo to plik"));
 	}
 	
 	
@@ -228,13 +226,13 @@ fn test_repo(item: &PathInfo) -> Result<(), String> {
 					
 					Ok(str) => {
 						
-						let mess = fmt::format(format_args!("branch {} -> {}", branch_clear, str));
+						let mess = format!("branch {} -> {}", branch_clear, str);
 						println_green(mess);
 					}
 					
 					Err(str) => {
 						
-						let mess = fmt::format(format_args!("branch {} -> {}", branch_clear, str));
+						let mess = format!("branch {} -> {}", branch_clear, str);
 						println_red(mess);
 						
 						is_err = true;
@@ -304,7 +302,7 @@ fn exec_expect(command: &Comm, value_expect: String) -> Result<(), String> {
 				
 				let comm = comm_to_string(command);
 				
-				Err(fmt::format(format_args!("spodziewano się innej wartości:\n{}\n -->\n{}", comm, mess)))
+				Err(format!("spodziewano się innej wartości:\n{}\n -->\n{}", comm, mess))
 			}
 		}
 		
@@ -313,7 +311,7 @@ fn exec_expect(command: &Comm, value_expect: String) -> Result<(), String> {
 			let comm        = comm_to_string(command);
 			let err_message = exec_err_to_string(err_status);
 			
-			Err(fmt::format(format_args!("błąd wykonywania polecenia:\n{}\n -->\n{}", comm, err_message)))
+			Err(format!("błąd wykonywania polecenia:\n{}\n -->\n{}", comm, err_message))
 		}
 	}
 }
@@ -324,7 +322,7 @@ fn exec_err_to_string(err: ErrCommand) -> String {
 		
 		ErrCommand::Exec(err) => {
 			
-			fmt::format(format_args!("ErrStatus::Exec --> {}", err))
+			format!("ErrStatus::Exec --> {}", err)
 		}
 		
 		ErrCommand::Output(out) => {
@@ -333,23 +331,23 @@ fn exec_err_to_string(err: ErrCommand) -> String {
 			
 			let stdout = match String::from_utf8(out.stdout) {
 				Ok(str) => str,
-				Err(err) => fmt::format(format_args!("incorrect utf8: <{}>", err)),
+				Err(err) => format!("incorrect utf8: <{}>", err),
 			};
 			
 			let stderr = match String::from_utf8(out.stderr) {
 				Ok(str) => str,
-				Err(err) => fmt::format(format_args!("incorrect utf8: <{}>", err)),
+				Err(err) => format!("incorrect utf8: <{}>", err),
 			};
 			
 			let stdout_len = stdout.len();
 			let stderr_len = stderr.len();
 			
-			fmt::format(format_args!("ErrStatus::NoEmptyOutput\n{}\nstdout len({}) -->\n{}\nstderr len({}) -->\n{}", out.status, stdout_len, stdout, stderr_len, stderr))
+			format!("ErrStatus::NoEmptyOutput\n{}\nstdout len({}) -->\n{}\nstderr len({}) -->\n{}", out.status, stdout_len, stdout, stderr_len, stderr)
 		}
 		
 		ErrCommand::Utf8(err_utf) => {
 			
-			fmt::format(format_args!("ErrStatus::Utf8 --> {}", err_utf))
+			format!("ErrStatus::Utf8 --> {}", err_utf)
 		}
 	}
 }

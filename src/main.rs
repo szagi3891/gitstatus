@@ -1,7 +1,7 @@
 use std::fs::{self};
 use std::path::Path;
 use std::process::{Command, Output};
-use std::str;
+//use std::str;
 use std::fmt;
 
 extern crate ansi_term;
@@ -66,7 +66,13 @@ char_vector.iter().map(|c| *c).collect::<std::strbuf::StrBuf>();
 Docs: std::str::from_chars
 (The latter can be used to collect to a ~str too, just by changing the StrBuf type hint.)
 
+let words = ["alpha", "beta", "gamma"];
+let merged: String = words.iter()
+						  .flat_map(|s| s.chars())
+						  .collect();
+assert_eq!(merged, "alphabetagamma");
 */
+
 
 fn real_main() -> i32 {
     
@@ -201,22 +207,19 @@ fn test_repo(item: &PathInfo) -> Result<(), String> {
 		
 		Ok(list_str) => {
 			
-			//println!("lista branczy do przetworzenia\n{}", list_str);
-			
 			for branch in list_str.lines() {
 				
-				//let branch_clear = clear_branch_name(branch.to_string());
-				/*
-				let branch_clear = branch.to_string().chars().filter(|&item| {
-					//item % 2 == 0
-					println!("item: {:?}", item);
-					true
-				});
+				let branch_clear: String = branch.to_string().chars().filter(|&item| {
+					
+					if item == ' ' || item == '*' {
+						false
+					} else {
+						true
+					}
 				
-				println!("branch do sprawdzenia {} -> {}", branch, branch_clear);
-				*/
+				}).collect();
 				
-				println!("branch do sprawdzenia -> {}", branch);
+				println!("branch do sprawdzenia -> {}", branch_clear);				
 			}
 			
 			return Ok(())

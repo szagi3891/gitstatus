@@ -207,7 +207,10 @@ fn test_repo(item: &PathInfo) -> Result<(), String> {
 		
 		Ok(list_str) => {
 			
+			let mut is_err = false;
+			
 			for branch in list_str.lines() {
+				
 				
 				let branch_clear: String = branch.to_string().chars().filter(|&item| {
 					
@@ -219,25 +222,74 @@ fn test_repo(item: &PathInfo) -> Result<(), String> {
 				
 				}).collect();
 				
-				println!("branch do sprawdzenia -> {}", branch_clear);				
+				
+				match test_branch(&item.path, &branch_clear) {
+					
+					Ok(str) => {
+						
+						let mess = fmt::format(format_args!("branch {} -> {}", branch_clear, str));
+						println_green(mess);
+					}
+					
+					Err(str) => {
+						
+						let mess = fmt::format(format_args!("branch {} -> {}", branch_clear, str));
+						println_red(mess);
+						
+						is_err = true;
+					}
+				}
 			}
 			
-			return Ok(())
-			//trzeba przetworzyć tą listę
+			match is_err {
+				false => {
+					Ok(())
+				}
+				true => {
+					Err("Nie wszystkie branche są wypchnięte na zdalny serwer".to_string())
+				}
+			}
 		}
+		
 		Err(err) => {
-			return Err(exec_err_to_string(err));
+			Err(exec_err_to_string(err))
 		}
 	}
 }
 
-/*
-fn clear_branch_name(branch: String) -> String {
+
+fn test_branch(path: &String, branch_clear: &String) -> Result<String, String> {
 	
-	//.chars()
+	let head = format!("{}...origin/{}", branch_clear, branch_clear);
 	
-	branch
-}*/
+	let command3 = Comm {
+		current_dir : path.clone(),
+		command     : "git".to_string(),
+		args        : vec!["rev-list".to_string(), head, "--ignore-submodules".to_string(), "--count".to_string()],
+	};
+	
+	//git rev-list HEAD...origin/master --ignore-submodules --count
+	
+	match exec_get(&command3) {
+		
+		Ok(count_str) => {
+			
+			let str_trim = count_str.trim().to_string();
+			
+			if str_trim == "0".to_string() {
+				Ok(str_trim)
+			} else {
+				Err(format!("nieprawidłowa wartość: {}", str_trim))
+			}
+		}
+		
+		Err(err) => {
+			
+			Err(format!("błąd wykonywania\n{}\n{}", comm_to_string(&command3), exec_err_to_string(err)))
+		}
+	}
+}
+
 
 fn exec_expect(command: &Comm, value_expect: String) -> Result<(), String> {
 	

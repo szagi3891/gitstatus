@@ -3,10 +3,6 @@ cargo new 'git-status-all' --bin
 
 
 
-git branch
-            lista branchy
-
-
 3.
 git rev-list HEAD...origin/master --ignore-submodules --count
 	trzeba sprawdzić czy wszystkie zmiany zostały wypchnięte

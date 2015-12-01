@@ -51,9 +51,16 @@ fn main() {
 	std::process::exit(exit_code);
 }
 
+//TODO - parsowanie argumentu
+//TODO - sprawdzanie branchy
+//TODO - usunięcie unwrap
 
 fn real_main() -> i32 {
     
+	/*
+	let threads = env::var("THREADS").unwrap_or("2".to_string())
+        .parse().unwrap();
+	*/
 	
 	let dir_str     = "/home/grzegorz/Pulpit/rust".to_string();
 	let root_path   = Path::new(&dir_str);

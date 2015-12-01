@@ -1,18 +1,8 @@
 cargo new 'git-status-all' --bin
 
 
-cargo build
-
-./target/debug/git-status-all
-
-0
 
 
-1.
-git status --short | wc -l
-            niewypchnięte zmiany
-
-2.
 git branch
             lista branchy
 

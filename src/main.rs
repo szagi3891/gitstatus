@@ -41,11 +41,19 @@ struct Comm {
 //format_args!("hello {}", "world")
 
 fn main() {
+	
+	println!("");
+	
+	let exit_code = real_main();
+	
+	println!("\n\n");
+
+	std::process::exit(exit_code);
+}
+
+
+fn real_main() -> i32 {
     
-	//println!("This is in red: {}", Red.paint("a red string"));
-	
-	println!("\n");
-	
 	
 	let dir_str     = "/home/grzegorz/Pulpit/rust".to_string();
 	let root_path   = Path::new(&dir_str);
@@ -73,46 +81,54 @@ fn main() {
 					}
 				}
 				
-				println!("\n");
+				println!("");
 			}
 			
-			println!("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
 			
 			if count_ok == list_len {
 				
-				println!("{}", Green.paint("Cała lista została sprawdzona"));
+				println_green("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!".to_string());
+				println_green("Cała lista została sprawdzona".to_string());
+				println_green("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!".to_string());
+				
+				return 0;
 				
 			} else {
 				
 				let count_err = list_len - count_ok;
 				let mess = fmt::format(format_args!("Cała lista została sprawdzona - błędnych {} z {}", count_err, list_len));
-				println!("{}", Red.paint(mess));
+				
+				println_red("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!".to_string());
+				println_red(mess);
+				println_red("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!".to_string());
+				
+				return 1;
 			}
 			
-			println!("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
 		}
 		
 		Err(error) => {
 			
-			println!("err list {:?}", error);
+			let mess = fmt::format(format_args!("err list {:?}", error));
+								   
+			println_red(mess);
+			
+			return 1;
 		}
 	}
 	
 	
-	println!("\n\n");
 }
 
-/*
-fn show_color_red() -> String {
+
+fn println_red(str: String) {
+	println!("{}", Red.paint(str));
 }
-*/
 
-/*
-let mut a : String = "A".into();
-let b : String = "B".into();
+fn println_green(str: String) {
+	println!("{}", Green.paint(str));
+}
 
-a.push_str(&b);
-*/
 
 fn test_repo(item: &PathInfo) -> Result<(), String> {
 	
@@ -154,10 +170,26 @@ fn test_repo(item: &PathInfo) -> Result<(), String> {
 	try!(exec_expect(&command2, "".to_string()));
 	
 	
-	//sprawdzanie poszczególnych branczy pozostało
 	
+	let command3 = Comm {
+		current_dir : item.path.clone(),
+		command     : "git".to_string(),
+		args        : vec!["branch".to_string()],
+	};
 	
-	Ok(())
+	match exec_get(&command3) {
+		
+		Ok(list_str) => {
+			
+			println!("lista branczy do przetworzenia\n{}", list_str);
+			
+			return Ok(())
+			//trzeba przetworzyć tą listę
+		}
+		Err(err) => {
+			return Err(exec_err_to_string(err));
+		}
+	}
 }
 
 
@@ -171,7 +203,10 @@ fn exec_expect(command: &Comm, value_expect: String) -> Result<(), String> {
 			if mess == value_expect {
 				Ok(())
 			} else {
-				Err(fmt::format(format_args!("spodziewano się innej wartości --> '{}'", mess)))
+				
+				let comm = comm_to_string(command);
+				
+				Err(fmt::format(format_args!("spodziewano się innej wartości:\n{}\n -->\n{}", comm, mess)))
 			}
 		}
 		
@@ -180,7 +215,7 @@ fn exec_expect(command: &Comm, value_expect: String) -> Result<(), String> {
 			let comm        = comm_to_string(command);
 			let err_message = exec_err_to_string(err_status);
 			
-			Err(fmt::format(format_args!("błąd wykonywania polecenia:\n{}\n --> \n{}", comm, err_message)))
+			Err(fmt::format(format_args!("błąd wykonywania polecenia:\n{}\n -->\n{}", comm, err_message)))
 		}
 	}
 }
@@ -208,7 +243,10 @@ fn exec_err_to_string(err: ErrCommand) -> String {
 				Err(err) => fmt::format(format_args!("incorrect utf8: <{}>", err)),
 			};
 			
-			fmt::format(format_args!("ErrStatus::NoEmptyOutput --> {}\nstdout -->\n{}\nstderr -->\n{}", out.status, stdout, stderr))
+			let stdout_len = stdout.len();
+			let stderr_len = stderr.len();
+			
+			fmt::format(format_args!("ErrStatus::NoEmptyOutput\n{}\nstdout len({}) -->\n{}\nstderr len({}) -->\n{}", out.status, stdout_len, stdout, stderr_len, stderr))
 		}
 		
 		ErrCommand::Utf8(err_utf) => {

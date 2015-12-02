@@ -14,6 +14,7 @@ enum ErrGetList {
 	MainListError(std::io::Error),
 	ItemGet(std::io::Error),
 	ItemMetadata(String, std::io::Error),
+	PathUtf8(std::path::PathBuf),			//błąd konwersji ścieżki na utf8
 }
 
 #[derive(Debug)]
@@ -48,7 +49,7 @@ fn main() {
 }
 
 //TODO - parsowanie argumentu
-//TODO - usunięcie unwrap
+
 
 
 //format_args!("hello {}", "world")
@@ -98,7 +99,7 @@ fn real_main() -> i32 {
 				
 				match test_repo(&item) {
 					Ok(()) => {
-						println!("{}", Green.paint("ok"));
+						println!("{}", Green.paint("repo -> ok"));
 						count_ok = count_ok + 1;
 					}
 					Err(str_err) => {
@@ -224,9 +225,9 @@ fn test_repo(item: &PathInfo) -> Result<(), String> {
 				
 				match test_branch(&item.path, &branch_clear) {
 					
-					Ok(str) => {
+					Ok(()) => {
 						
-						let mess = format!("branch {} -> {}", branch_clear, str);
+						let mess = format!("branch {} -> ok", branch_clear);
 						println_green(mess);
 					}
 					
@@ -257,7 +258,7 @@ fn test_repo(item: &PathInfo) -> Result<(), String> {
 }
 
 
-fn test_branch(path: &String, branch_clear: &String) -> Result<String, String> {
+fn test_branch(path: &String, branch_clear: &String) -> Result<(), String> {
 	
 	let head = format!("{}...origin/{}", branch_clear, branch_clear);
 	
@@ -276,7 +277,7 @@ fn test_branch(path: &String, branch_clear: &String) -> Result<String, String> {
 			let str_trim = count_str.trim().to_string();
 			
 			if str_trim == "0".to_string() {
-				Ok(str_trim)
+				Ok(())
 			} else {
 				Err(format!("rozsynchronizowany branch: {}", str_trim))
 			}
@@ -436,9 +437,16 @@ fn get_list(dir_str: &Path) -> Result<Vec<PathInfo>, ErrGetList> {	//Result<Vec<
 							
 							Ok(list_item) => {
 								
-														//TODO - trzeba się pozbyć unwrap
+								let path = list_item.path();
 								
-								let path_item = list_item.path().to_str().unwrap().to_string();
+								let path_item = match path.to_str() {
+									Some(value) => {
+										value.to_string()
+									}
+									None => {
+										return Err(ErrGetList::PathUtf8(path.clone()))
+									}
+								};
 								
 								
 								match list_item.metadata() {

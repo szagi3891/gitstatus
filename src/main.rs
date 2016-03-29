@@ -219,35 +219,46 @@ fn test_repo(item: &PathInfo) -> Result<(), String> {
 
 
 fn test_branch(path: &String, branch_clear: &String) -> Result<(), String> {
-	
-	let head = format!("{}...origin/{}", branch_clear, branch_clear);
-	
-	let command3 = Comm {
+    
+    //git log --pretty=format:%h -1 master
+    //git log --pretty=format:%H -1 origin/master
+    
+    let branch1 = format!("{}"       , branch_clear);
+    let branch2 = format!("origin/{}", branch_clear);
+    
+    let command1 = Comm {
 		current_dir : path.clone(),
 		command     : "git".to_owned(),
-		args        : vec!["rev-list".to_owned(), head, "--ignore-submodules".to_owned(), "--count".to_owned()],
+		args        : vec!["log".to_owned(), "--pretty=format:%H".to_owned(), "-1".to_owned(), branch1],
+	};
+    
+	let command2 = Comm {
+		current_dir : path.clone(),
+		command     : "git".to_owned(),
+		args        : vec!["log".to_owned(), "--pretty=format:%H".to_owned(), "-1".to_owned(), branch2],
 	};
 	
-	//git rev-list HEAD...origin/master --ignore-submodules --count
+    
+    let out1 = match exec_get(&command1) {
+        Ok(str) => str.trim().to_owned(),
+        Err(err) => {
+            return Err(format!("błąd wykonywania\n{}\n{}", comm_to_string(&command1), exec_err_to_string(err)));
+        }
+    };
 	
-	match exec_get(&command3) {
-		
-		Ok(count_str) => {
-			
-			let str_trim = count_str.trim().to_owned();
-			
-			if str_trim == "0".to_owned() {
-				Ok(())
-			} else {
-				Err(format!("rozsynchronizowany branch: {}", str_trim))
-			}
-		}
-		
-		Err(err) => {
-			
-			Err(format!("błąd wykonywania\n{}\n{}", comm_to_string(&command3), exec_err_to_string(err)))
-		}
-	}
+    let out2 = match exec_get(&command2) {
+        Ok(str) => str.trim().to_owned(),
+        Err(err) => {
+            return Err(format!("błąd wykonywania\n{}\n{}", comm_to_string(&command2), exec_err_to_string(err)));
+        }
+    };
+    
+    if out1 == out2 {
+        
+        Ok(())
+        
+    } else {
+        
+        Err(format!("rozsynchronizowany\ncurrent: {}\norigin : {}", out1, out2))
+    }
 }
-
-

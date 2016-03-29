@@ -2,15 +2,47 @@ cargo new 'git-status-all' --bin
 
 
 
+git log --pretty=format:%h -1 master
 
-3.
-git rev-list HEAD...origin/master --ignore-submodules --count
-	trzeba sprawdzić czy wszystkie zmiany zostały wypchnięte
- 
- 
+git log --pretty=format:%H -1 origin/master
 
- 
-string currentBranch = run("git rev-parse --abbrev-ref HEAD");                             
-bool canCommit = run("git diff-index --name-only --ignore-submodules HEAD --").empty();
-bool canPush = stoi(run("git rev-list HEAD...origin/" + currentBranch + " --ignore-submodules --count")[0]) > 0;
- 
+diff <(git log --pretty=format:%H -1 master) <(git log --pretty=format:%H -1 origin/master)
+
+
+down vote
+accepted
+Use <(command) to pass one command's output to another program as if it were a file name. Bash pipes the program's output to a pipe and passes a file name like /dev/fd/63 to the outer command.
+
+diff <(./a) <(./b)
+Similarly you can use >(command) if you want to pipe something into a command.
+
+http://stackoverflow.com/questions/3800202/diff-output-from-two-programs-without-temporary-files
+
+
+
+
+
+
+
+//TODO - parsowanie argumentu
+
+//format_args!("hello {}", "world")
+//let out = format!("hello {}", "world");
+
+/*
+let four_lines = "foo\r\nbar\n\nbaz\n";
+let v: Vec<&str> = four_lines.lines().collect();
+assert_eq!(v, ["foo", "bar", "", "baz"]);
+"lion::tiger::leopard".split("::").collect(); -> iterator
+
+std::str::from_chars(char_vector.as_slice()); // creates a ~str
+char_vector.iter().map(|c| *c).collect::<std::strbuf::StrBuf>();
+Docs: std::str::from_chars
+(The latter can be used to collect to a ~str too, just by changing the StrBuf type hint.)
+
+let words = ["alpha", "beta", "gamma"];
+let merged: String = words.iter()
+						  .flat_map(|s| s.chars())
+						  .collect();
+assert_eq!(merged, "alphabetagamma");
+*/

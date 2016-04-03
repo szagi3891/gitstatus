@@ -79,7 +79,7 @@ fn real_main() -> i32 {
                 
                 } else {
                     
-                    println!("To nie katalog - pomijam");
+                    println_green("To nie katalog - pomijam".to_owned());
                 }
 				
 				println!("");

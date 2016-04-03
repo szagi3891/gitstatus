@@ -58,43 +58,45 @@ fn real_main() -> i32 {
 		
 		Ok(list) => {
 			
-			let mut count_ok = 0;
-			let list_len     = list.len();
+			let mut count_err = 0;
 			
 			for item in list {
 				
 				println!("Testuję ścieżkę: {}", item.path);
 				
-				match test_repo(&item) {
-					Ok(()) => {
-                        println_green("repo -> ok".to_owned());
-						count_ok = count_ok + 1;
-					}
-					Err(str_err) => {
-                        println_red(str_err);
-					}
-				}
+                
+                if item.is_dir {
+                    
+    				match test_repo(&item) {
+                        Ok(()) => {
+                            println_green("repo -> ok".to_owned());
+                        }
+                        Err(str_err) => {
+                            count_err = count_err + 1;
+                            println_red(str_err);
+                        }
+                    }
+                
+                } else {
+                    
+                    println!("To nie katalog - pomijam");
+                }
 				
 				println!("");
 			}
 			
 			
-			if count_ok == list_len {
+			if count_err == 0 {
 				
-				println_green("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!".to_owned());
 				println_green("Cała lista została sprawdzona".to_owned());
-				println_green("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!".to_owned());
 				
 				0
 				
 			} else {
 				
-				let count_err = list_len - count_ok;
-				let mess = format!("Cała lista została sprawdzona - błędnych {} z {}", count_err, list_len);
+				let mess = format!("Cała lista została sprawdzona - błędnych {}", count_err);
 				
-				println_red("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!".to_owned());
 				println_red(mess);
-				println_red("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!".to_owned());
 				
 				1
 			}

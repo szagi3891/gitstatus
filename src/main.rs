@@ -69,7 +69,7 @@ fn real_main() -> i32 {
                     
     				match test_repo(&item) {
                         Ok(()) => {
-                            println_green("repo -> ok".to_owned());
+                            //println_green("repo -> ok".to_owned());
                         }
                         Err(str_err) => {
                             count_err = count_err + 1;
@@ -189,13 +189,13 @@ fn test_repo(item: &PathInfo) -> Result<(), String> {
 					
 					Ok(()) => {
 						
-						let mess = format!("branch {} -> ok", branch_clear);
+						let mess = format!("branch '{}' -> ok", branch_clear);
 						println_green(mess);
 					}
 					
 					Err(str) => {
 						
-						let mess = format!("branch {} -> {}", branch_clear, str);
+						let mess = format!("branch '{}' -> {}", branch_clear, str);
 						println_red(mess);
 						
 						is_err = true;

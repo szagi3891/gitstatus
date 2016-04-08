@@ -1,7 +1,7 @@
 extern crate ansi_term;
 
 use std::path::Path;
-//use std::env;
+use std::env;
 
 mod err_command;
 mod get_list;
@@ -13,34 +13,39 @@ use get_list::{PathInfo, get_list};
 use command::{Comm, exec_expect, exec_get, comm_to_string};
 use print::{println_red, println_green};
 
-
 fn main() {
 	
 	println!("");
 	
-	let exit_code = real_main();
 	
-	println!("\n\n");
-
-	std::process::exit(exit_code);
-}
-
-
-fn real_main() -> i32 {
-    
+	
 	/*
 	let threads = env::var("THREADS").unwrap_or("2".to_owned())
         .parse().unwrap();
 	*/
 	
                             //TODO ...
-    /*
+    
     match env::current_exe() {
-        Ok(exe_path) => println!("Path of this executable is: {}",
-                                  exe_path.display()),
+        Ok(exe_path) => {
+			
+			let dir_str = exe_path.parent().unwrap().parent().unwrap().parent().unwrap().parent().unwrap();
+			
+			println!("scaning: {}", dir_str.display());
+			println!("");
+			
+			//println!("Path of this executable is: {}", exe_path.display());
+			
+			let exit_code = real_main(dir_str);
+	
+			println!("\n\n");
+			
+			std::process::exit(exit_code);
+		},
         Err(e) => println!("failed to get current exe path: {}", e),
     };
     
+	/*
     parent().parent().parent().parent()
     /home/grzegorz/Pulpit/rust/gitstatus/target/debug/git-status-all
     ->
@@ -48,9 +53,26 @@ fn real_main() -> i32 {
     */
     
     
+	
+    /*
+	//let dir_str     = "/home/grzegorz/Pulpit/rust".to_owned();
+	let dir_str     = "/home/gszeliga/workspace".to_owned();
+	
+	
+	
+	let exit_code = real_main(dir_str);
+	
+	println!("\n\n");
+	
+	std::process::exit(exit_code);
+	*/
+}
+
+
+fn real_main(root_path: &Path) -> i32 {
     
-	let dir_str     = "/home/grzegorz/Pulpit/rust".to_owned();
-	let root_path   = Path::new(&dir_str);
+	
+	//let root_path   = Path::new(&dir_str);
 	let list_result = get_list(&root_path);
 	
 	
